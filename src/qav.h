@@ -20,11 +20,14 @@
 #ifndef _QAV_H_
 #define _QAV_H_
 
+
 // libavcodec is a C library without C++ guards...
 extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
+#include <ffmpeg/libavcodec/avcodec.h>
+#include <ffmpeg/libavdevice/avdevice.h>
+#include <ffmpeg/libavfilter/avfilter.h>
+#include <ffmpeg/libavformat/avformat.h>
+#include <ffmpeg/libswscale/swscale.h>
 }
 
 #include <string>
