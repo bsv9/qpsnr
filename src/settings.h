@@ -23,7 +23,6 @@
 #include <string>
 #include <iostream>
 
-
 #define	LEVEL_LOG_ERROR		(0x01)
 #define	LEVEL_LOG_WARNING	(0x02)
 #define	LEVEL_LOG_INFO		(0x04)

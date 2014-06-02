@@ -20,14 +20,11 @@
 #ifndef _QAV_H_
 #define _QAV_H_
 
-
 // libavcodec is a C library without C++ guards...
 extern "C" {
-#include <ffmpeg/libavcodec/avcodec.h>
-#include <ffmpeg/libavdevice/avdevice.h>
-#include <ffmpeg/libavfilter/avfilter.h>
-#include <ffmpeg/libavformat/avformat.h>
-#include <ffmpeg/libswscale/swscale.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
 }
 
 #include <string>
@@ -56,11 +53,12 @@ namespace qav {
 		AVFrame			*pFrame;
 		struct SwsContext	*img_convert_ctx;
 		std::string		fname;
+		void free_resources(void);
 	public:
 		qvideo(const char* file, int _out_width = -1, int _out_height = -1);
 		scr_size get_size(void) const;
 		int get_fps_k(void) const;
-		bool get_frame(std::vector<unsigned char>& out, int *_frnum = 0);
+		bool get_frame(std::vector<unsigned char>& out, int *_frnum = 0, const bool skip = false);
 		void save_frame(const unsigned char *buf, const char* __fname = 0);
 		~qvideo();
 	};

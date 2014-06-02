@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <ostream>
+#include <string>
 
 namespace stats {
 	typedef std::vector<unsigned char>	VUCHAR;
@@ -37,8 +38,7 @@ namespace stats {
 		_n_streams(n_streams), _i_width(i_width), _i_height(i_height), _ostr(ostr) {
 		}
 
-		virtual void set_parameter(const char* p_name, const char *p_value) {
-		}
+		virtual void set_parameter(const std::string& p_name, const std::string& p_value) = 0;
 
 		virtual void process(const int& ref_frame, VUCHAR& ref, const std::vector<bool>& v_ok, std::vector<VUCHAR>& streams) = 0;
 

@@ -49,16 +49,16 @@ namespace stats {
 		if (!x_bl_num || !y_bl_num) return 0.0;
 		std::vector<double>	ssim_accum;
 		// for each block do it
-		for(int yB = 0; yB < y_bl_num; ++yB)
-			for(int xB = 0; xB < x_bl_num; ++xB) {
+		for(unsigned int yB = 0; yB < y_bl_num; ++yB)
+			for(unsigned int xB = 0; xB < x_bl_num; ++xB) {
 				const unsigned int	base_offset = xB*b_sz + yB*b_sz*x;
 				double			ref_acc = 0.0,
 							ref_acc_2 = 0.0,
 							cmp_acc = 0.0,
 							cmp_acc_2 = 0.0,
 							ref_cmp_acc = 0.0;
-				for(int j = 0; j < b_sz; ++j)
-					for(int i = 0; i < b_sz; ++i) {
+				for(unsigned int j = 0; j < b_sz; ++j)
+					for(unsigned int i = 0; i < b_sz; ++i) {
 						// we have to multiply by 3, colorplanes are Y Cb Cr, we need
 						// only Y component
 						const unsigned char	c_ref = ref[3*(base_offset + j*x + i)],
@@ -341,9 +341,8 @@ namespace stats {
 		s_base(n_streams, i_width, i_height, ostr), _colorspace("rgb") {
 		}
 
-		virtual void set_parameter(const char* p_name, const char *p_value) {
-			const std::string s_name(p_name);
-			if (s_name == "colorspace") {
+		virtual void set_parameter(const std::string& p_name, const std::string& p_value) {
+			if (p_name == "colorspace") {
 				_colorspace = p_value;
 				if (_colorspace != "rgb" && _colorspace != "hsi"
 				&& _colorspace != "ycbcr" && _colorspace != "y")
@@ -352,7 +351,7 @@ namespace stats {
 		}
 
 		virtual void process(const int& ref_frame, VUCHAR& ref, const std::vector<bool>& v_ok, std::vector<VUCHAR>& streams) {
-			if (v_ok.size() != streams.size() || v_ok.size() != _n_streams) throw std::runtime_error("Invalid data size passed to analyzer");
+			if (v_ok.size() != streams.size() || v_ok.size() != (unsigned int)_n_streams) throw std::runtime_error("Invalid data size passed to analyzer");
 			// process colorspace
 			process_colorspace(ref, v_ok, streams);
 			//
@@ -386,18 +385,17 @@ namespace stats {
 		psnr(n_streams, i_width, i_height, ostr), _fpa(1), _accum_f(0), _last_frame(-1), _accum_v(n_streams) {
 		}
 
-		virtual void set_parameter(const char* p_name, const char *p_value) {
+		virtual void set_parameter(const std::string& p_name, const std::string& p_value) {
 			psnr::set_parameter(p_name, p_value);
 			//
-			const std::string s_name(p_name);
-			if (s_name == "fpa") {
-				const int fpa = atoi(p_value);
+			if (p_name == "fpa") {
+				const int fpa = atoi(p_value.c_str());
 				if (fpa > 0) _fpa = fpa;
 			}
 		}
 
 		virtual void process(const int& ref_frame, VUCHAR& ref, const std::vector<bool>& v_ok, std::vector<VUCHAR>& streams) {
-			if (v_ok.size() != streams.size() || v_ok.size() != _n_streams) throw std::runtime_error("Invalid data size passed to analyzer");
+			if (v_ok.size() != streams.size() || v_ok.size() != (unsigned)_n_streams) throw std::runtime_error("Invalid data size passed to analyzer");
 			// set last frame
 			_last_frame = ref_frame;
 			// process colorspace
@@ -443,16 +441,15 @@ namespace stats {
 		s_base(n_streams, i_width, i_height, ostr), _blocksize(8) {
 		}
 
-		virtual void set_parameter(const char* p_name, const char *p_value) {
-			const std::string s_name(p_name);
-			if (s_name == "blocksize") {
-				const int blocksize = atoi(p_value);
+		virtual void set_parameter(const std::string& p_name, const std::string& p_value) {
+			if (p_name == "blocksize") {
+				const int blocksize = atoi(p_value.c_str());
 				if (blocksize > 0) _blocksize = blocksize;
 			}
 		}
 
 		virtual void process(const int& ref_frame, VUCHAR& ref, const std::vector<bool>& v_ok, std::vector<VUCHAR>& streams) {
-			if (v_ok.size() != streams.size() || v_ok.size() != _n_streams) throw std::runtime_error("Invalid data size passed to analyzer");
+			if (v_ok.size() != streams.size() || v_ok.size() != (unsigned int)_n_streams) throw std::runtime_error("Invalid data size passed to analyzer");
 			// convert to Y colorspace
 			rgb_2_Y_tp(ref, v_ok, streams);
 			//
@@ -486,18 +483,17 @@ namespace stats {
 		ssim(n_streams, i_width, i_height, ostr), _fpa(1), _accum_f(0), _last_frame(-1), _accum_v(n_streams) {
 		}
 
-		virtual void set_parameter(const char* p_name, const char *p_value) {
+		virtual void set_parameter(const std::string& p_name, const std::string& p_value) {
 			ssim::set_parameter(p_name, p_value);
 			//
-			const std::string s_name(p_name);
-			if (s_name == "fpa") {
-				const int fpa = atoi(p_value);
+			if (p_name == "fpa") {
+				const int fpa = atoi(p_value.c_str());
 				if (fpa > 0) _fpa = fpa;
 			}
 		}
 
 		virtual void process(const int& ref_frame, VUCHAR& ref, const std::vector<bool>& v_ok, std::vector<VUCHAR>& streams) {
-			if (v_ok.size() != streams.size() || v_ok.size() != _n_streams) throw std::runtime_error("Invalid data size passed to analyzer");
+			if (v_ok.size() != streams.size() || v_ok.size() != (unsigned int)_n_streams) throw std::runtime_error("Invalid data size passed to analyzer");
 			// set last frame
 			_last_frame = ref_frame;
 			// convert to Y colorspace

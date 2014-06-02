@@ -35,7 +35,7 @@ template<typename T>
 std::string XtoS(const T& in) {
 	std::ostringstream	oss;
 	oss << in;
-	return in.str();
+	return oss.str();
 }
 
 std::string get_filename(const std::string& in) {
@@ -50,15 +50,16 @@ class video_producer : public mt::Thread {
 					&_s_cons;
 	std::vector<unsigned char>	&_buf;
 	qav::qvideo			&_video;
-	bool				&_exit;
+	bool				&_exit,
+					&_skip;
 public:
-	video_producer(int& frame, mt::Semaphore& s_prod, mt::Semaphore& s_cons, std::vector<unsigned char>& buf, qav::qvideo& video, bool& __exit) : 
-	_frame(frame), _s_prod(s_prod), _s_cons(s_cons), _buf(buf), _video(video), _exit(__exit) {
+	video_producer(int& frame, mt::Semaphore& s_prod, mt::Semaphore& s_cons, std::vector<unsigned char>& buf, qav::qvideo& video, bool& __exit, bool& __skip) : 
+	_frame(frame), _s_prod(s_prod), _s_cons(s_cons), _buf(buf), _video(video), _exit(__exit), _skip(__skip) {
 	}
 
 	virtual void run(void) {
 		while(!_exit) {
-			if (!_video.get_frame(_buf, &_frame)) _frame = -1;
+			if (!_video.get_frame(_buf, &_frame, _skip)) _frame = -1;
 			// signal cons we're done
 			_s_cons.pop();
 			// wait for cons to tell us to go
@@ -80,10 +81,10 @@ typedef std::vector<shared_ptr<vp_data> >		V_VPDATA;
 typedef std::vector<shared_ptr<video_producer> >	V_VPTH;
 
 const std::string	__qpsnr__ = "qpsnr",
-			__version__ = "0.2.1";
+			__version__ = "0.2.5";
 
 void print_help(void) {
-	std::cerr <<	__qpsnr__ << " v" << __version__ << " - (C) 2010 E. Oriani\n"
+	std::cerr <<	__qpsnr__ << " v" << __version__ << " - (C) 2010, 2011, 2012 E. Oriani - 2013 E. Oriani, Paul Caron\n"
 			"Usage: " << __qpsnr__ << " [options] -r ref.video compare.video1 compare.video2 ...\n\n"
 			"-r,--reference:\n\tset reference video (mandatory)\n"
 			"\n-v,--video-size:\n\tset analysis video size WIDTHxHEIGHT (ie. 1280x720), default is reference video size\n"
@@ -173,7 +174,7 @@ int parse_options(int argc, char *argv[], std::map<std::string, std::string>& ao
 					char log_level[2];
 					log_level[0] = optarg[0];
 					log_level[1] = '\0';
-					const int log_ilev = atoi(optarg);
+					const int log_ilev = atoi(log_level);
 					switch (log_ilev) {
 						case 0:
 							settings::LOG = 0x00;
@@ -209,7 +210,7 @@ int parse_options(int argc, char *argv[], std::map<std::string, std::string>& ao
 				{
 					const char 	*p_opts = optarg,
 							*p_colon = 0;
-					while(p_colon = strchr(p_opts, ':')) {
+					while((p_colon = strchr(p_opts, ':'))) {
 						const std::string	c_opt(p_opts, (p_colon-p_opts));
 						const size_t 		p_equal = c_opt.find('=');
 						if (std::string::npos != p_equal)
@@ -276,6 +277,14 @@ namespace producers_utils {
 		for(V_VPDATA::iterator it = v_data.begin(); it != v_data.end(); ++it)
 			(*it)->prod.pop();
 	}
+
+	bool is_frame_skip(const int& frame_num) {
+		return (settings::SKIP_FRAMES > 0) && (settings::SKIP_FRAMES >= frame_num);
+	}
+
+	bool is_last_frame(const int& frame_num) {
+		return (settings::MAX_FRAMES > 0) && (frame_num >= settings::MAX_FRAMES);
+	}
 }
 
 int main(int argc, char *argv[]) {
@@ -324,7 +333,7 @@ int main(int argc, char *argv[]) {
 		LOG_INFO << "Analyzer set: " << settings::ANALYZER << std::endl;
 		std::auto_ptr<stats::s_base>	s_analyzer(stats::get_analyzer(settings::ANALYZER.c_str(), v_data.size(), ref_sz.x, ref_sz.y, std::cout));
 		// set the default values, in case will get overwritten
-		s_analyzer->set_parameter("fpa", "25");
+		s_analyzer->set_parameter("fpa", XtoS(ref_fps_k/1000));
 		s_analyzer->set_parameter("blocksize", "8");
 		// load the passed parameters
 		for(std::map<std::string, std::string>::const_iterator it = aopt.begin(); it != aopt.end(); ++it) {
@@ -332,10 +341,13 @@ int main(int argc, char *argv[]) {
 			s_analyzer->set_parameter(it->first.c_str(), it->second.c_str());
 		}
 		// create all the threads
-		video_producer	ref_vpth(ref_frame, ref_prod, sem_cons, ref_buf, ref_video, glb_exit);
+		// this varibale holds a bool to say if we have to skip
+		// or not the next frame to extract, first frame is 1
+		bool skip_next_frame = producers_utils::is_frame_skip(1);
+		video_producer	ref_vpth(ref_frame, ref_prod, sem_cons, ref_buf, ref_video, glb_exit, skip_next_frame);
 		V_VPTH		v_th;
 		for(V_VPDATA::iterator it = v_data.begin(); it != v_data.end(); ++it)
-			v_th.push_back(new video_producer((*it)->frame, (*it)->prod, sem_cons, (*it)->buf, *((*it)->video), glb_exit));
+			v_th.push_back(new video_producer((*it)->frame, (*it)->prod, sem_cons, (*it)->buf, *((*it)->video), glb_exit, skip_next_frame));
 		// we'll need some tmp buffers
 		VUCHAR			t_ref_buf;
 		std::vector<VUCHAR>	t_bufs(v_data.size());
@@ -344,7 +356,7 @@ int main(int argc, char *argv[]) {
 		producers_utils::lock(sem_cons, ref_prod, v_data);
 		// start the threads
 		producers_utils::start(ref_vpth, v_th);
-		// print header
+		// print header, this has to be moved in the analyzer
 		std::cout << "Sample,";
 		for(V_VPDATA::const_iterator it = v_data.begin(); it != v_data.end(); ++it)
 			std::cout << (*it)->name << ',';
@@ -361,8 +373,11 @@ int main(int argc, char *argv[]) {
 				producers_utils::unlock(ref_prod, v_data);
 				continue;
 			}
-			// in case we have to skip frames...
-			if (settings::SKIP_FRAMES > 0 && settings::SKIP_FRAMES >= cur_ref_frame) {
+			skip_next_frame = producers_utils::is_frame_skip(cur_ref_frame+1);
+			// set if we have to exit
+			glb_exit = producers_utils::is_last_frame(cur_ref_frame);
+			// in case we have to skip frames or exit...
+			if (skip_next_frame || glb_exit) {
 				// allow the producers to run
 				producers_utils::unlock(ref_prod, v_data);
 				continue;
@@ -374,19 +389,13 @@ int main(int argc, char *argv[]) {
 				else v_ok.push_back(false);
 			// then swap the vectors
 			t_ref_buf.swap(ref_buf);
-			for(int i = 0; i < v_data.size(); ++i)
+			for(size_t i = 0; i < v_data.size(); ++i)
 				t_bufs[i].swap(v_data[i]->buf);
 			// allow the producers to run
 			producers_utils::unlock(ref_prod, v_data);
 			// finally process data
-			s_analyzer->process(cur_ref_frame, t_ref_buf, v_ok, t_bufs);
-			// check if we have to exit
-			if (settings::MAX_FRAMES > 0 && cur_ref_frame >= settings::MAX_FRAMES) {
-				glb_exit = true;
-				// allow the producers to run
-				producers_utils::unlock(ref_prod, v_data);
-				break;
-			}
+			if(!producers_utils::is_frame_skip(cur_ref_frame))
+				s_analyzer->process(cur_ref_frame, t_ref_buf, v_ok, t_bufs);
 		}
 		// wait for all threads
 		producers_utils::stop(ref_vpth, v_th);
