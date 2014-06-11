@@ -381,7 +381,7 @@ int main(int argc, char *argv[]) {
 		std::cout << "    <!--[if IE]> " << std::endl;
 		std::cout << "    <script type=\"text/javascript\" src=\"/static/lib/FlashCanvas/bin/flashcanvas.js\"></script> " << std::endl;
 		std::cout << "    <![endif]--> " << std::endl;
-		std::cout << "    <script type=\"text/javascript\" src=\"js/flotr2.min.js\"></script> " << std::endl;
+		std::cout << "    <script type=\"text/javascript\" src=\"http://flotr.googlecode.com/svn-history/r319/branches/flotr2/flotr/flotr2/flotr2.min.js\"></script> " << std::endl;
 		std::cout << "    <script type=\"text/javascript\"> " << std::endl;
 		std::cout << "      (function () { " << std::endl;
 		std::cout << "        var i, graph;" << std::endl;
