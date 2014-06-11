@@ -32,8 +32,8 @@ extern "C" {
 
 namespace qav {
 	struct scr_size {
-		int	x,
-			y;
+		int x;
+		int y;
 		scr_size(const int& _x = 0, const int& _y = 0) : x(_x), y(_y) {
 		}
 
@@ -43,16 +43,16 @@ namespace qav {
 	};
 
 	class qvideo {
-		int			frnum,
-					videoStream,
-					out_width,
-					out_height;
-		AVFormatContext		*pFormatCtx;
-		AVCodecContext  	*pCodecCtx;
-		AVCodec         	*pCodec;
-		AVFrame			*pFrame;
-		struct SwsContext	*img_convert_ctx;
-		std::string		fname;
+		int frnum;
+		int videoStream;
+		int out_width;
+		int out_height;
+		AVFormatContext   *pFormatCtx;
+		AVCodecContext    *pCodecCtx;
+		AVCodec           *pCodec;
+		AVFrame           *pFrame;
+		struct SwsContext *img_convert_ctx;
+		std::string        fname;
 		void free_resources(void);
 	public:
 		qvideo(const char* file, int _out_width = -1, int _out_height = -1);

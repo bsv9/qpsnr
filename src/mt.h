@@ -36,9 +36,9 @@ namespace mt {
 		mt_exception(const std::string& what) : _what(what) {
 		}
 
-  		virtual const char* what() const throw() {
-    			return _what.c_str();
-  		}
+		virtual const char* what() const throw() {
+			return _what.c_str();
+		}
 
 		~mt_exception() throw () {
 		}

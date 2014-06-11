@@ -114,8 +114,8 @@ void print_help(void) {
 int parse_options(int argc, char *argv[], std::map<std::string, std::string>& aopt) {
 	aopt.clear();
 	opterr = 0;
-     	int 	c = 0,
-		option_index = 0;
+	int c = 0,
+	option_index = 0;
 
 	static struct option long_options[] =
 	{
@@ -224,7 +224,7 @@ int parse_options(int argc, char *argv[], std::map<std::string, std::string>& ao
 				}
 				break;
 			case '?':
-             			if (strchr("almorsv", optopt)) {
+				if (strchr("almorsv", optopt)) {
 					std::cerr << "Option -" << (char)optopt << " requires an argument" << std::endl;
 					print_help();
 					exit(1);
@@ -357,10 +357,49 @@ int main(int argc, char *argv[]) {
 		// start the threads
 		producers_utils::start(ref_vpth, v_th);
 		// print header, this has to be moved in the analyzer
-		std::cout << "Sample,";
+		/*std::cout << "Sample,";
 		for(V_VPDATA::const_iterator it = v_data.begin(); it != v_data.end(); ++it)
 			std::cout << (*it)->name << ',';
-		std::cout << std::endl;
+		std::cout << std::endl;*/
+
+		std::cout << "<html> " << std::endl;
+		std::cout << "  <head> " << std::endl;
+		std::cout << "    <style type=\"text/css\"> " << std::endl;
+		std::cout << "      body { " << std::endl;
+		std::cout << "        margin: 0px; " << std::endl;
+		std::cout << "        padding: 0px; " << std::endl;
+		std::cout << "      } " << std::endl;
+		std::cout << "      #container { " << std::endl;
+		std::cout << "        width : 90%; " << std::endl;
+		std::cout << "        height: 90%; " << std::endl;
+		std::cout << "        margin: 8px auto; " << std::endl;
+		std::cout << "      } " << std::endl;
+		std::cout << "    </style> " << std::endl;
+		std::cout << "  </head> " << std::endl;
+		std::cout << "  <body> " << std::endl;
+		std::cout << "    <div id=\"container\"></div> " << std::endl;
+		std::cout << "    <!--[if IE]> " << std::endl;
+		std::cout << "    <script type=\"text/javascript\" src=\"/static/lib/FlashCanvas/bin/flashcanvas.js\"></script> " << std::endl;
+		std::cout << "    <![endif]--> " << std::endl;
+		std::cout << "    <script type=\"text/javascript\" src=\"js/flotr2.min.js\"></script> " << std::endl;
+		std::cout << "    <script type=\"text/javascript\"> " << std::endl;
+		std::cout << "      (function () { " << std::endl;
+		std::cout << "        var i, graph;" << std::endl;
+
+		size_t index = 0;
+		for(V_VPDATA::const_iterator it = v_data.begin(); it != v_data.end(); ++it, ++index)
+		{
+			std::cout << "var d" << index <<  " = [];" << std::endl;
+		}
+
+		index = 0;
+		std::cout << "data = [" << std::endl;
+		for(V_VPDATA::const_iterator it = v_data.begin(); it != v_data.end(); ++it, ++index)
+		{
+			std::cout << "{ data : d" << index << ", label :\"" << (*it)->name << "\"}," << std::endl;
+		}
+		std::cout << "];" << std::endl;
+
 		while(!glb_exit) {
 			// wait for the consumer to be signalled 1 + n times
 			const static int CONS_SIG_NUM = 1 + v_th.size();
@@ -383,7 +422,7 @@ int main(int argc, char *argv[]) {
 				continue;
 			}
 			// vector of bool telling if everything is ok
-			std::vector<bool>	v_ok;
+			std::vector<bool> v_ok;
 			for(V_VPDATA::const_iterator it = v_data.begin(); it != v_data.end(); ++it)
 				if ((*it)->frame == cur_ref_frame) v_ok.push_back(true);
 				else v_ok.push_back(false);
@@ -397,6 +436,36 @@ int main(int argc, char *argv[]) {
 			if(!producers_utils::is_frame_skip(cur_ref_frame))
 				s_analyzer->process(cur_ref_frame, t_ref_buf, v_ok, t_bufs);
 		}
+
+
+		std::cout << "        var" << std::endl;
+		std::cout << "          container = document.getElementById('container')," << std::endl;
+		std::cout << "          graph;" << std::endl;
+
+		std::cout << "        function labelFn (label) {" << std::endl;
+		std::cout << "          return label;" << std::endl;
+		std::cout << "        }" << std::endl;
+
+		std::cout << "        // Draw Graph" << std::endl;
+		std::cout << "        graph = Flotr.draw(container, data, {" << std::endl;
+		std::cout << "          xaxis: {" << std::endl;
+		std::cout << "            minorTickFreq: 4" << std::endl;
+		std::cout << "          }, " << std::endl;
+		std::cout << "          grid: {" << std::endl;
+		std::cout << "            minorVerticalLines: true" << std::endl;
+		std::cout << "          }," << std::endl;
+		std::cout << "          legend : {" << std::endl;
+		std::cout << "            position : 'se',            // Position the legend 'south-east'." << std::endl;
+		std::cout << "            labelFormatter : labelFn,   // Format the labels." << std::endl;
+		std::cout << "            backgroundColor : '#D2E8FF' // A light blue background color." << std::endl;
+		std::cout << "          }," << std::endl;
+		std::cout << "        });" << std::endl;
+		std::cout << "      })();" << std::endl;
+		std::cout << "    </script>" << std::endl;
+		std::cout << "  </body>" << std::endl;
+		std::cout << "</html>" << std::endl;
+
+
 		// wait for all threads
 		producers_utils::stop(ref_vpth, v_th);
 	} catch(std::exception& e) {

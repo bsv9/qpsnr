@@ -51,12 +51,12 @@ namespace stats {
 		// for each block do it
 		for(unsigned int yB = 0; yB < y_bl_num; ++yB)
 			for(unsigned int xB = 0; xB < x_bl_num; ++xB) {
-				const unsigned int	base_offset = xB*b_sz + yB*b_sz*x;
-				double			ref_acc = 0.0,
-							ref_acc_2 = 0.0,
-							cmp_acc = 0.0,
-							cmp_acc_2 = 0.0,
-							ref_cmp_acc = 0.0;
+				const unsigned int base_offset = xB*b_sz + yB*b_sz*x;
+				double ref_acc = 0.0;
+				double ref_acc_2 = 0.0;
+				double cmp_acc = 0.0;
+				double cmp_acc_2 = 0.0;
+				double ref_cmp_acc = 0.0;
 				for(unsigned int j = 0; j < b_sz; ++j)
 					for(unsigned int i = 0; i < b_sz; ++i) {
 						// we have to multiply by 3, colorplanes are Y Cb Cr, we need
@@ -73,17 +73,17 @@ namespace stats {
 				// http://en.wikipedia.org/wiki/SSIM
 				// http://en.wikipedia.org/wiki/Variance
 				// http://en.wikipedia.org/wiki/Covariance
-				const double	n_samples = (b_sz*b_sz),
-						ref_avg = ref_acc/n_samples,
-						ref_var = ref_acc_2/n_samples - (ref_avg*ref_avg),
-						cmp_avg = cmp_acc/n_samples,
-						cmp_var = cmp_acc_2/n_samples - (cmp_avg*cmp_avg),
-						ref_cmp_cov = ref_cmp_acc/n_samples - (ref_avg*cmp_avg),
-						c1 = 6.5025, // (0.01*255.0)^2
-						c2 = 58.5225, // (0.03*255)^2
-						ssim_num = (2.0*ref_avg*cmp_avg + c1)*(2.0*ref_cmp_cov + c2),
-						ssim_den = (ref_avg*ref_avg + cmp_avg*cmp_avg + c1)*(ref_var + cmp_var + c2),
-						ssim = ssim_num/ssim_den;
+				const double n_samples = (b_sz*b_sz);
+				const double ref_avg = ref_acc/n_samples;
+				const double ref_var = ref_acc_2/n_samples - (ref_avg*ref_avg);
+				const double cmp_avg = cmp_acc/n_samples;
+				const double cmp_var = cmp_acc_2/n_samples - (cmp_avg*cmp_avg);
+				const double ref_cmp_cov = ref_cmp_acc/n_samples - (ref_avg*cmp_avg);
+				const double c1 = 6.5025; // (0.01*255.0)^2
+				const double c2 = 58.5225; // (0.03*255)^2
+				const double ssim_num = (2.0*ref_avg*cmp_avg + c1)*(2.0*ref_cmp_cov + c2);
+				const double ssim_den = (ref_avg*ref_avg + cmp_avg*cmp_avg + c1)*(ref_var + cmp_var + c2);
+				const double ssim = ssim_num/ssim_den;
 				ssim_accum.push_back(ssim);
 			}
 
@@ -143,19 +143,19 @@ namespace stats {
 	}
 
 	static int getCPUcount(void) {
-    		std::ifstream		cpuinfo("/proc/cpuinfo");
-    		std::string		line;
-    		std::set<std::string>	IDs;
-    		while (cpuinfo){
-        		std::getline(cpuinfo,line);
-        		if (line.empty())
-            			continue;
-        		if (line.find("processor") != 0)
-            			continue;
-        		IDs.insert(line);
-    		}
+			std::ifstream		cpuinfo("/proc/cpuinfo");
+			std::string		line;
+			std::set<std::string>	IDs;
+			while (cpuinfo){
+				std::getline(cpuinfo,line);
+				if (line.empty())
+						continue;
+				if (line.find("processor") != 0)
+						continue;
+				IDs.insert(line);
+			}
 		if (IDs.empty()) return 1;
-    		return IDs.size();
+			return IDs.size();
 	}
 
 	static mt::ThreadPool	__stats_tp(getCPUcount());
@@ -321,10 +321,13 @@ namespace stats {
 		std::string	_colorspace;
 	protected:
 		void print(const int& ref_frame, const std::vector<double>& v_res) {
-			_ostr << ref_frame << ',';
+			
+			for(int i = 0; i < _n_streams; ++i)
+				_ostr << "d" << i << ".push([" << ref_frame << ", " << v_res[i] << "]);" << std::endl;
+			/*_ostr << ref_frame << ',';
 			for(int i = 0; i < _n_streams; ++i)
 				_ostr << v_res[i] << ',';
-			_ostr << std::endl;
+			_ostr << std::endl;*/
 		}
 
 		void process_colorspace(VUCHAR& ref, const std::vector<bool>& v_ok, std::vector<VUCHAR>& streams) {
@@ -431,10 +434,13 @@ namespace stats {
 		int	_blocksize;
 
 		void print(const int& ref_frame, const std::vector<double>& v_res) {
+			for(int i = 0; i < _n_streams; ++i)
+				_ostr << "d" << i << ".push([" << ref_frame << ", " << v_res[i] << "]);" << std::endl;
+			/*
 			_ostr << ref_frame << ',';
 			for(int i = 0; i < _n_streams; ++i)
 				_ostr << v_res[i] << ',';
-			_ostr << std::endl;
+			_ostr << std::endl;*/
 		}
 	public:
 		ssim(const int& n_streams, const int& i_width, const int& i_height, std::ostream& ostr) :
