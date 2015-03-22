@@ -20,14 +20,11 @@
 #ifndef _QAV_H_
 #define _QAV_H_
 
-
 // libavcodec is a C library without C++ guards...
 extern "C" {
-#include <ffmpeg/libavcodec/avcodec.h>
-#include <ffmpeg/libavdevice/avdevice.h>
-#include <ffmpeg/libavfilter/avfilter.h>
-#include <ffmpeg/libavformat/avformat.h>
-#include <ffmpeg/libswscale/swscale.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
 }
 
 #include <string>
@@ -35,8 +32,8 @@ extern "C" {
 
 namespace qav {
 	struct scr_size {
-		int	x,
-			y;
+		int x;
+		int y;
 		scr_size(const int& _x = 0, const int& _y = 0) : x(_x), y(_y) {
 		}
 
@@ -46,21 +43,22 @@ namespace qav {
 	};
 
 	class qvideo {
-		int			frnum,
-					videoStream,
-					out_width,
-					out_height;
-		AVFormatContext		*pFormatCtx;
-		AVCodecContext  	*pCodecCtx;
-		AVCodec         	*pCodec;
-		AVFrame			*pFrame;
-		struct SwsContext	*img_convert_ctx;
-		std::string		fname;
+		int frnum;
+		int videoStream;
+		int out_width;
+		int out_height;
+		AVFormatContext   *pFormatCtx;
+		AVCodecContext    *pCodecCtx;
+		AVCodec           *pCodec;
+		AVFrame           *pFrame;
+		struct SwsContext *img_convert_ctx;
+		std::string        fname;
+		void free_resources(void);
 	public:
 		qvideo(const char* file, int _out_width = -1, int _out_height = -1);
 		scr_size get_size(void) const;
 		int get_fps_k(void) const;
-		bool get_frame(std::vector<unsigned char>& out, int *_frnum = 0);
+		bool get_frame(std::vector<unsigned char>& out, int *_frnum = 0, const bool skip = false);
 		void save_frame(const unsigned char *buf, const char* __fname = 0);
 		~qvideo();
 	};

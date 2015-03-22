@@ -5,6 +5,11 @@ This is a port for libavcodec api version >= 54.
 
 Original version written by Emanuele Oriani. [http://qpsnr.youlink.org](http://qpsnr.youlink.org)
 
+Build Status
+============
+
+[![Build Status](https://drone.io/github.com/MarcAntoine-Arnaud/qpsnr/status.png)](https://drone.io/github.com/MarcAntoine-Arnaud/qpsnr/latest)
+
 Usage
 ======
 

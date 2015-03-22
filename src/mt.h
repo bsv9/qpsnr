@@ -17,25 +17,6 @@
 *	along with qpsnr.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
-*	myNZB (C) 2009 E. Oriani, ema <AT> fastwebnet <DOT> it
-*
-*	This file is part of myNZB.
-*
-*	myNZB is free software: you can redistribute it and/or modify
-*	it under the terms of the GNU General Public License as published by
-*	the Free Software Foundation, either version 3 of the License, or
-*	(at your option) any later version.
-*
-*	myNZB is distributed in the hope that it will be useful,
-*	but WITHOUT ANY WARRANTY; without even the implied warranty of
-*	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*	GNU General Public License for more details.
-*
-*	You should have received a copy of the GNU General Public License
-*	along with myNZB.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 #ifndef _MT_H_
 #define _MT_H_
 
@@ -55,9 +36,9 @@ namespace mt {
 		mt_exception(const std::string& what) : _what(what) {
 		}
 
-  		virtual const char* what() const throw() {
-    			return _what.c_str();
-  		}
+		virtual const char* what() const throw() {
+			return _what.c_str();
+		}
 
 		~mt_exception() throw () {
 		}
@@ -280,7 +261,7 @@ namespace mt {
 		// Just take into account that semaphores are not syscall immune
 		// so when you run in debug mode you can have exceptions thrown on
 		// push because of system interrruption! Don't get scared!
-		ThreadPool(const unsigned int& n_execs) : _n_execs(n_execs), _th_ids(n_execs), _tp_quit(false) {
+		ThreadPool(const unsigned int& n_execs) : _tp_quit(false), _n_execs(n_execs), _th_ids(n_execs) {
 			if (_n_execs == 0 || _n_execs > 256)
 				throw mt_exception("ThreadPool: invalid number of n_execs");
 			// create the job_exec threads
